@@ -8,9 +8,8 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include "funcs.h"
 
-double find_dist(double time, double x0,  double S0, double gamma);
-double find_time(double dist, double x0, double S0, double gamma);
 
 using namespace std;
 
@@ -39,18 +38,14 @@ vector<vector<double> > solve_odes(double S0, double gamma, double k, int num_os
 			times where no neurons are firing aren't recorded. The number of timesteps isn't
 			known a priori, which means that arrays can't be used. So, must use vectors instead
 	*/
-		
+
+
+	//Instantiate
+	double time_till_next_fire;
 	vector< vector<double> > sols;
+	vector<double> fired_neurons;
 	double clock = 0.0;         		  // to help with recording times, see last step of program
 	sols.reserve(int(1.2*num_osc));      	//first guess at num time steps
-
-
-	//For Better Random Number Generation
-	//default_random_engine generator(seed);
-  //uniform_real_distribution<double> distribution(0.0,1.0);
-
-	//Here I'm trying an alternate random number generation, for compatibility
-	// reasons with the Sethna cluster
 	srand(time(NULL));
 	
 	
@@ -67,6 +62,7 @@ vector<vector<double> > solve_odes(double S0, double gamma, double k, int num_os
 		}
 
 		
+	
 	//Make IC
 	vector<double> row;  // this contains the voltages at every timestep
 	sols.push_back(row);
@@ -83,90 +79,21 @@ vector<vector<double> > solve_odes(double S0, double gamma, double k, int num_os
 
 
 
+
 /* --------------------- START MAIN WHILE LOOP ------------------------------------------ */
 	int t = 1;
 
 	while(clock < T){
+
 		//Instantiate
 		sols.push_back(row);
 		sols[t].resize(num_osc);  //allocate memory
 
 
-		//Find which neuron nearest to firing
-		double dist_nearest_neuron = 1;
-		double first_fire_index = 0;
-		for(int i=0;i<num_osc;i++){
-			if(1 - sols[t-1][i] < dist_nearest_neuron)
-				dist_nearest_neuron  = 1 - sols[t-1][i];
-				first_fire_index = i;
-			}
-
-	
-		// Move all neurons up and count how many fire
-		double time_till_next_fire = find_time(dist_nearest_neuron, sols[t-1][first_fire_index], S0,gamma);
-
-		vector<double> fired_neurons; 
-		for(int i=0;i<num_osc;i++){
-			sols[t][i] = sols[t-1][i] + find_dist(time_till_next_fire, sols[t-1][i], S0, gamma);
-			if(sols[t][i] >= 1){
-				fired_neurons.push_back(i);  //record who fired
-				sols[t][i] = 0;              //reset voltage if fired
-				}
-			}
-		
-
-		//Scramble the oscillators, V_old -> V_new
-		vector<double> unique_voltages;
-		vector<double> reassigned_voltages;
-		unique_voltages.resize(num_osc);
-		reassigned_voltages.resize(num_osc);
-		bool checker;
-		bool isPresent;
-
-		for(int osc=0;osc<num_osc;osc++){
-
-			//Only Reassign neurons that haven't fired
-			isPresent = (find(fired_neurons.begin(), fired_neurons.end(), osc) != fired_neurons.end());
-			if(isPresent!=1){
-			
-
-				//Check that voltage hasn't been recored yet
-				checker = 1;
-				for(int v=0;v<unique_voltages.size();v++){
-					if(sols[t][osc] == unique_voltages[v]){   	//make sure not in list already
-						sols[t][osc] = reassigned_voltages[v];    //if he is in list already, then
-						checker = 0;															//he's part of a synchronous pack,
-						}																					//so give him the same reassignment
-					}																						//as his friends
-
-
-				//If not part of pack, then add to list & scramble!
-				if(checker == 1){
-					double temp = (double(rand()) / (double(RAND_MAX)+1));
-					unique_voltages.push_back(sols[t][osc]);			//record the voltage to be reassigned
-					reassigned_voltages.push_back(temp);    			//record what he got reassigned to
-					sols[t][osc] = temp;													//do the reassignment
-					}
-				}
-			}
-
-
-		//Absorb anyone within the sync zone
-		double sync_zone = ( k* double(fired_neurons.size()) ) / double(num_osc); // j/N
-		for(int i=0;i<num_osc;i++){
-		isPresent = (find(fired_neurons.begin(), fired_neurons.end(), i) != fired_neurons.end());
-	    if(isPresent!=1){
-				bool inZone;
-				inZone = (1- sols[t][i]) < sync_zone;
-				if(inZone == 1) 							//are they in the sync zone
-					fired_neurons.push_back(i);		
-				}
-			}
-			
-
-		//Reset all neurons that have fired
-		for(int osc=0;osc<fired_neurons.size();osc++)
-			sols[t][fired_neurons[osc]] = 0;
+		//Do dynamics
+		time_till_next_fire = fire_pulse(sols[t-1], sols[t],fired_neurons,S0,gamma,num_osc);
+		scramble(sols[t], fired_neurons, num_osc);
+		absorb(sols[t], fired_neurons, k,  num_osc);
 
 
 		//Write to file
@@ -178,8 +105,6 @@ vector<vector<double> > solve_odes(double S0, double gamma, double k, int num_os
 		
 		//Clear vectors
 		fired_neurons.erase(fired_neurons.begin(), fired_neurons.end());
-		unique_voltages.erase(unique_voltages.begin(), unique_voltages.end()); 
-		reassigned_voltages.erase(reassigned_voltages.begin(), reassigned_voltages.end()); 
 
 
 		//While loop counters
@@ -198,18 +123,4 @@ vector<vector<double> > solve_odes(double S0, double gamma, double k, int num_os
 	}
 
 
-// Auxilliary functions
-double find_dist(double time, double x0, double S0, double gamma){
-	if(gamma == 0)
-		return S0*time;
-	else
-		return x0*gamma*exp(-gamma*time) + (S0 / gamma) * (1 - exp(gamma*time));
-	}
-
-double find_time(double dist, double x0, double S0, double gamma){
-	if(gamma == 0)
-		return dist / S0;
-	else
-		return (1 / gamma)*log( (S0 - x0*gamma) / (S0 -1*gamma));
-	}
 

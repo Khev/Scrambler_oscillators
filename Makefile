@@ -1,9 +1,5 @@
-sim: main_moments.cpp solve_odes.cpp find_clusters.cpp find_cluster_moments.cpp
-			g++ -o sim -O3  main_moments.cpp solve_odes.cpp find_clusters.cpp find_cluster_moments.cpp -I.
-
-
-sim1: main_moments.cpp solve_odes_new.cpp fire_pulse.cpp scramble.cpp absorb.cpp find_clusters.cpp find_cluster_moments.cpp
-			g++ -o sim1 -O3 main_moments.cpp solve_odes_new.cpp fire_pulse.cpp scramble.cpp absorb.cpp find_clusters.cpp find_cluster_moments.cpp -I.
+sim: main_moments.cpp solve_odes.cpp fire_pulse.cpp scramble.cpp absorb.cpp find_clusters.cpp find_cluster_moments.cpp
+			g++ -o sim -O3 main_moments.cpp solve_odes.cpp fire_pulse.cpp scramble.cpp absorb.cpp find_clusters.cpp find_cluster_moments.cpp -I.
 
 
 clusters: main_clusters.cpp solve_odes.cpp find_and_write_clusters.cpp 

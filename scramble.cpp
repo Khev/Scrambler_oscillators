@@ -50,14 +50,13 @@ void scramble(vector<double> &sols_t, vector<double> fired_neurons, int num_osc)
 				//If not part of pack, then add to list & scramble!
 				if(checker == 1){
 					double temp = (double(rand()) / (double(RAND_MAX)+1));
-					cout << "temp = " << temp << ",";
+					//cout << "temp = " << temp << ",";
 					unique_voltages.push_back(sols_t[osc]);			//record the voltage to be reassigned
 					reassigned_voltages.push_back(temp);    			//record what he got reassigned to
 					sols_t[osc] = temp;													//do the reassignment
 					}
 				}
 			}
-			cout << endl;
 	}
 
 

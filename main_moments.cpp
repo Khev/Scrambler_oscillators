@@ -49,7 +49,7 @@ int main(int argc, char* argv[]){
 
 	//Run simulation
 	clock_t begin = clock();
-	vector<vector<double> > sols = solve_odes_new(S0, gamma, k, num_osc,T, seed, dir);
+	vector<vector<double> > sols = solve_odes(S0, gamma, k, num_osc,T, seed, dir);
 	int NT = sols.size();
 	double** clusters = find_clusters(sols, NT, num_osc, dir);
 	double** moments = find_cluster_moments(clusters, num_moments, NT, num_osc, dir);
