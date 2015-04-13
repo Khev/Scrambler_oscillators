@@ -5,12 +5,19 @@ using namespace std;
 
 double fire_pulse(vector<double> sol_t_previous, vector<double> &sols_t, vector<double> &fired_neurons,  double S0, double gamma, int num_osc);
 
+
+double fire_pulse_with_delay(vector<double> sol_t_previous, vector<double> &sols_t, vector< vector<double> > &log_of_fired_neurons, vector<double> &pulse_times, double _t_next_fire, double clock, double tau,  double S0, double gamma, int num_osc);
+
+
 void scramble(vector<double> &sols_t, vector<double> fired_neurons, int num_osc);
 
 void absorb(vector<double> &sols_t, vector<double> &fired_neurons, double k, int num_osc);
 
 
 vector<vector<double> > solve_odes(double S0, double gamma, double k,  int num_osc, double T, int seed, string dir);
+
+
+vector<vector<double> > solve_odes_with_delay(double S0, double gamma, double k, double tau, int num_osc, double T, int seed, string dir);
 
 vector<vector<double> > solve_odes_ensemble(double S0, double gamma, int num_osc, double T, 			int seed, int trial);
 

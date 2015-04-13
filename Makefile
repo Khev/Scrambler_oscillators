@@ -2,6 +2,11 @@ sim: main_moments.cpp solve_odes.cpp fire_pulse.cpp scramble.cpp absorb.cpp find
 			g++ -o sim -O3 main_moments.cpp solve_odes.cpp fire_pulse.cpp scramble.cpp absorb.cpp find_clusters.cpp find_cluster_moments.cpp -I.
 
 
+
+del: main_delay.cpp solve_odes_with_delay.cpp fire_pulse_with_delay.cpp scramble.cpp absorb.cpp find_clusters.cpp find_cluster_moments.cpp
+			g++ -o del -O3 main_delay.cpp solve_odes_with_delay.cpp fire_pulse_with_delay.cpp scramble.cpp absorb.cpp find_clusters.cpp find_cluster_moments.cpp -I.
+
+
 clusters: main_clusters.cpp solve_odes.cpp find_and_write_clusters.cpp 
 			g++ -o clus -O3  main_clusters.cpp solve_odes.cpp find_and_write_clusters.cpp  -I.
 
